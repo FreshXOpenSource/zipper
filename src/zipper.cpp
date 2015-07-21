@@ -13,20 +13,20 @@
 
 #define TOSTR(obj) (*String::Utf8Value((obj)->ToString()))
 
-Persistent<FunctionTemplate> Zipper::constructor;
+Persistent<Function> Zipper::constructor;
 
 void Zipper::Initialize(Handle<Object> target) {
 
-    HandleScope scope;
-  
-    constructor = Persistent<FunctionTemplate>::New(FunctionTemplate::New(Zipper::New));
-    constructor->InstanceTemplate()->SetInternalFieldCount(1);
-    constructor->SetClassName(String::NewSymbol("Zipper"));
+    NanScope();
+    Local<FunctionTemplate> tpl = NanNew<FunctionTemplate>(Zipper::New);
+    tpl->InstanceTemplate()->SetInternalFieldCount(1);
+    tpl->SetClassName(NanNew<String>("Zipper"));
 
     // functions
-    NODE_SET_PROTOTYPE_METHOD(constructor, "addFile", addFile);
+    NODE_SET_PROTOTYPE_METHOD(tpl, "addFile", addFile);
 
-    target->Set(String::NewSymbol("Zipper"),constructor->GetFunction());
+    NanAssignPersistent(constructor, tpl->GetFunction());
+    target->Set(NanNew<String>("Zipper"),tpl->GetFunction());
 }
 
 Zipper::Zipper(std::string const& file_name) :
@@ -38,16 +38,15 @@ Zipper::~Zipper() {
     zip_close(archive_);
 }
 
-Handle<Value> Zipper::New(const Arguments& args)
+NAN_METHOD(Zipper::New)
 {
-    HandleScope scope;
+    NanScope();
 
     if (!args.IsConstructCall())
-        return ThrowException(String::New("Cannot call constructor as function, you need to use 'new' keyword"));
+        return NanThrowError("Cannot call constructor as function, you need to use 'new' keyword");
 
     if (args.Length() != 1 || !args[0]->IsString())
-        return ThrowException(Exception::TypeError(
-          String::New("first argument must be a path to a zipfile")));
+        return NanThrowTypeError("first argument must be a path to a zipfile");
 
     std::string input_file = TOSTR(args[0]);
     struct zip *za;
@@ -57,14 +56,13 @@ Handle<Value> Zipper::New(const Arguments& args)
         zip_error_to_str(errstr, sizeof(errstr), err, errno);
         std::stringstream s;
         s << "cannot open file: " << input_file << " error: " << errstr << "\n";
-        return ThrowException(Exception::Error(
-            String::New(s.str().c_str())));
+        return NanThrowError(s.str().c_str());
     }
 
     Zipper* zf = new Zipper(input_file);
     zf->archive_ = za;
     zf->Wrap(args.This());
-    return args.This();
+    NanReturnValue(args.This());
 
 }
 
@@ -81,28 +79,24 @@ typedef struct {
 } closure_t;
 
 
-Handle<Value> Zipper::addFile(const Arguments& args)
+NAN_METHOD(Zipper::addFile)
 {
-    HandleScope scope;
+    NanScope();
 
     if (args.Length() < 3)
-        return ThrowException(Exception::TypeError(
-          String::New("requires three arguments, the path of a file, a filename and a callback")));
+        return NanThrowTypeError("requires three arguments, the path of a file, a filename and a callback");
     
     // first arg must be path
     if(!args[0]->IsString())
-        return ThrowException(Exception::TypeError(
-          String::New("first argument must be a file path to add to the zip")));
+        return NanThrowTypeError("first argument must be a file path to add to the zip");
     
     // second arg must be name
     if(!args[1]->IsString())
-        return ThrowException(Exception::TypeError(
-          String::New("second argument must be a file name to add to the zip")));
+        return NanThrowTypeError("second argument must be a file name to add to the zip");
     
     // last arg must be function callback
     if (!args[args.Length()-1]->IsFunction())
-        return ThrowException(Exception::TypeError(
-                  String::New("last argument must be a callback function")));
+        return NanThrowTypeError("last argument must be a callback function");
   
     std::string path = TOSTR(args[0]);
     std::string name = TOSTR(args[1]);
@@ -123,7 +117,7 @@ Handle<Value> Zipper::addFile(const Arguments& args)
         std::stringstream s;
         s << "cannot open file: " << zf->file_name_ << " error: " << errstr << "\n";
         zip_close(za);
-        return ThrowException(Exception::Error(String::New(s.str().c_str())));
+        return NanThrowError(s.str().c_str());
     }
 
     closure->zf = zf;
@@ -131,11 +125,11 @@ Handle<Value> Zipper::addFile(const Arguments& args)
     closure->error = false;
     closure->path = path;
     closure->name = name;
-    closure->cb = Persistent<Function>::New(Handle<Function>::Cast(args[args.Length()-1]));
+    NanAssignPersistent(closure->cb, args[args.Length()-1].As<Function>());
     req->data = closure;
 
     uv_queue_work(uv_default_loop(), req, _AddFile, (uv_after_work_cb)_AfterAddFile);
-    return Undefined();
+    NanReturnUndefined();
 }
 
 
@@ -163,22 +157,22 @@ void Zipper::_AddFile(uv_work_t *req)
 
 void Zipper::_AfterAddFile(uv_work_t *req)
 {
-    HandleScope scope;
+    NanScope();
 
     closure_t *closure = static_cast<closure_t *>(req->data);
 
     TryCatch try_catch;
   
     if (closure->error) {
-        Local<Value> argv[1] = { Exception::Error(String::New(closure->error_name.c_str())) };
-        closure->cb->Call(Context::GetCurrent()->Global(), 1, argv);
+        Local<Value> argv[1] = { Exception::Error(NanNew<String>(closure->error_name.c_str())) };
+        NanMakeCallback(NanGetCurrentContext()->Global(), NanNew(closure->cb), 1, argv);
     } else {
-        Local<Value> argv[1] = { Local<Value>::New(Null()) };
-        closure->cb->Call(Context::GetCurrent()->Global(), 1, argv);
+        Local<Value> argv[1] = { NanNull() };
+        NanMakeCallback(NanGetCurrentContext()->Global(), NanNew(closure->cb), 1, argv);
     }
     
     closure->zf->Unref();
-    closure->cb.Dispose();
+    NanDisposePersistent(closure->cb);
     delete closure;
     delete req;
 

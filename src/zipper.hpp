@@ -1,8 +1,8 @@
 #ifndef __ZIPPER_H__
 #define __ZIPPER_H__
 
-#include <v8.h>
 #include <node.h>
+#include <nan.h>
 #include <node_object_wrap.h>
 
 // stl
@@ -20,12 +20,12 @@ using namespace node;
 
 class Zipper: public node::ObjectWrap {
   public:
-    static Persistent<FunctionTemplate> constructor;
+    static Persistent<Function> constructor;
     static void Initialize(Handle<Object> target);
-    static Handle<Value> New(const Arguments &args);
+    static NAN_METHOD(New);
     
     // Async
-    static Handle<Value> addFile(const Arguments& args);
+    static NAN_METHOD(addFile);
     static void _AddFile(uv_work_t *req);
     static void _AfterAddFile(uv_work_t *req);
     

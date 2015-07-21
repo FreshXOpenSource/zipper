@@ -13,6 +13,7 @@
             "conditions": [
                 [ 'OS=="mac"', {
                     "include_dirs": [
+                        "<!(node -e \"require('nan')\")",
                         "deps/libzip-<(libzip)/lib/"
                     ],
                     "libraries": [
@@ -22,6 +23,9 @@
                     ],
                 } ],
                 [ 'OS=="linux"', {
+                    "include_dirs": [
+                        "<!(node -e \"require('nan')\")"
+                    ],
                     "libraries": [
                         "-lz",
                         "-lzip"

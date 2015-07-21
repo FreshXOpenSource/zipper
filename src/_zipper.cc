@@ -19,13 +19,13 @@ extern "C" {
     Zipper::Initialize(target);
 
     // zipper version
-    target->Set(String::NewSymbol("version"), String::New("0.0.1"));
+    target->Set(NanNew<String>("version"), NanNew<String>("0.0.1"));
 
     // versions of deps
-    Local<Object> versions = Object::New();
-    versions->Set(String::NewSymbol("node"), String::New(NODE_VERSION+1));
-    versions->Set(String::NewSymbol("v8"), String::New(V8::GetVersion()));
-    target->Set(String::NewSymbol("versions"), versions);
+    Local<Object> versions = NanNew<Object>();
+    versions->Set(NanNew<String>("node"), NanNew<String>(NODE_VERSION+1));
+    versions->Set(NanNew<String>("v8"), NanNew<String>(V8::GetVersion()));
+    target->Set(NanNew<String>("versions"), versions);
 
   }
 
