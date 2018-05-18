@@ -13,7 +13,7 @@ using namespace v8;
 
 extern "C" {
 
-  static void init (Handle<Object> target)
+  static void init (Local<Object> target)
   {
 
     Zipper::Initialize(target);

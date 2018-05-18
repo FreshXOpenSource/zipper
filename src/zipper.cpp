@@ -15,7 +15,7 @@
 
 Nan::Persistent<Function> Zipper::constructor;
 
-void Zipper::Initialize(Handle<Object> target) {
+void Zipper::Initialize(Local<Object> target) {
 
     Nan::HandleScope scope;
     Local<FunctionTemplate> tpl = Nan::New<FunctionTemplate>(Zipper::New);
