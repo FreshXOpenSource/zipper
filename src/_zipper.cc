@@ -23,8 +23,8 @@ extern "C" {
     
     // versions of deps
     Local<Object> versions = Nan::New<Object>();
-    Nan::Set(versions, Nan::New<String>("node").ToLocalChecked(), Nan::New<String>(NODE_VERSION+1)).ToLocalChecked();
-    Nan::Set(versions, Nan::New<String>("v8").ToLocalChecked(), Nan::New<String>(V8::GetVersion())).ToLocalChecked();
+    //Nan::Set(versions, Nan::New<String>("node").ToLocalChecked(), Nan::New<String>(NODE_VERSION+1)).ToLocalChecked();
+    //Nan::Set(versions, Nan::New<String>("v8").ToLocalChecked(), Nan::New<String>(V8::GetVersion())).ToLocalChecked();
     Nan::Set(versions, Nan::New<String>("versions").ToLocalChecked(), versions);
 
   }
