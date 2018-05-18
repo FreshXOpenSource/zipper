@@ -25,7 +25,7 @@
     }
   ],
   "dependencies": {
-    "nan": "1.8.4"
+    "nan": "^2.0.0"
   },
   "directories": {
     "examples": "examples",
