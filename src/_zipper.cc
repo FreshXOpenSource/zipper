@@ -19,7 +19,7 @@ extern "C" {
     Zipper::Initialize(target);
 
     // zipper version
-    target->Set(Nan::New<v8::String>("version"), Nan::New<v8::String>("0.0.1").ToLocalChecked());
+    target->Set(Nan::New<v8::String>("version").ToLocalChecked(), Nan::New<v8::String>("0.0.1"));
 
     // versions of deps
     Local<Object> versions = Nan::New<Object>();
